@@ -196,22 +196,23 @@ def load_class_names(path: Path) -> list[str]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load model and classes once at server startup."""
-    global model, class_names
-
+    global model, class_names, image_validator
+    print("STARTUP: beginning model loading", flush=True)
     if not MODEL_PATH.is_file():
         raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
-
+    print("STARTUP: loading class names", flush=True)
     class_names = load_class_names(CLASS_PATH)
+    print("STARTUP: loading TensorFlow model", flush=True)
     model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-    
+    print("STARTUP: TensorFlow model loaded", flush=True)
     #new ----
-    global image_validator
-
+    print("STARTUP: loading CLIP validator", flush=True)
     image_validator = pipeline(
     task="zero-shot-image-classification",
     model="openai/clip-vit-base-patch32",
     device=-1,  # CPU
     )
+    print("STARTUP: CLIP validator loaded", flush=True)
     logger.info("CLIP image validator loaded")
     
     #------------------------
